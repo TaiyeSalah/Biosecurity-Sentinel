@@ -1,0 +1,48 @@
+# Environment
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Model weights (too large for git — use Git LFS or cloud storage)
+models/weights/*.pt
+models/weights/*.onnx
+models/weights/*.joblib
+!models/weights/.gitkeep
+
+# Data (too large for git)
+data/
+!data/.gitkeep
+
+# Logs
+logs/
+*.jsonl
+!logs/.gitkeep
+
+# Exports
+exports/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
