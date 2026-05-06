@@ -1,0 +1,50 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          # Install CPU-only torch first (GitHub Actions has no GPU)
+          pip install torch==2.3.0 --index-url https://download.pytorch.org/whl/cpu
+          pip install torch-geometric==2.5.3
+          pip install torch-scatter torch-sparse -f https://data.pyg.org/whl/torch-2.3.0+cpu.html
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          pytest tests/ -v \
+            --cov=core \
+            --cov=models \
+            --cov=config \
+            --cov-report=term-missing \
+            --cov-report=xml \
+            -x
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: coverage.xml
+          fail_ci_if_error: false
