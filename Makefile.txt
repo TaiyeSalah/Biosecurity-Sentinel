@@ -1,0 +1,70 @@
+.PHONY: help install train evaluate test demo serve lint clean
+
+PYTHON  := python
+PYTEST  := pytest
+UVICORN := uvicorn
+
+help:
+	@echo ""
+	@echo "  Biosecurity Sentinel — available commands"
+	@echo "  ─────────────────────────────────────────"
+	@echo "  make install     Install all dependencies"
+	@echo "  make train       Train the SchNet model (GPU recommended)"
+	@echo "  make evaluate    Run benchmark evaluation on test sets"
+	@echo "  make test        Run unit + integration tests"
+	@echo "  make demo        Launch demo notebook"
+	@echo "  make serve       Start the FastAPI server (port 8000)"
+	@echo "  make lint        Run ruff + mypy"
+	@echo "  make clean       Remove cache and temp files"
+	@echo ""
+
+install:
+	pip install torch==2.3.0
+	pip install torch-scatter torch-sparse -f https://data.pyg.org/whl/torch-2.3.0+cpu.html
+	pip install -r requirements.txt
+	@echo "✓ Installation complete"
+
+data:
+	$(PYTHON) -c "from training.download_datasets import download_all; download_all()"
+	@echo "✓ Datasets downloaded to data/"
+
+train: data
+	$(PYTHON) training/train.py \
+		--epochs 100 \
+		--batch-size 32 \
+		--lr 1e-3 \
+		--output models/weights/sentinel.pt
+	@echo "✓ Training complete — weights saved to models/weights/sentinel.pt"
+
+evaluate:
+	$(PYTHON) training/evaluate.py \
+		--model-path models/weights/sentinel.pt \
+		--output results/benchmark.json
+	@echo "✓ Evaluation complete — results saved to results/benchmark.json"
+
+test:
+	$(PYTEST) tests/ -v --cov=core --cov=models --cov=api \
+		--cov-report=term-missing \
+		--cov-report=html:htmlcov
+	@echo "✓ Tests complete"
+
+demo:
+	jupyter notebook notebooks/demo.ipynb
+	@echo "✓ Notebook launched"
+
+serve:
+	$(UVICORN) api.main:app --host 0.0.0.0 --port 8000 --reload
+	@echo "✓ Server running at http://localhost:8000"
+
+lint:
+	ruff check . --fix
+	mypy core/ models/ api/ training/ --ignore-missing-imports
+	@echo "✓ Lint complete"
+
+clean:
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name "*.pyc" -delete 2>/dev/null || true
+	find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
+	find . -type d -name "htmlcov" -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name ".coverage" -delete 2>/dev/null || true
+	@echo "✓ Clean complete"

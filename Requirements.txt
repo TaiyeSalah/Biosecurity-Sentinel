@@ -1,0 +1,67 @@
+# Biosecurity Sentinel — Python Requirements
+# Install order matters. Follow the setup instructions below.
+#
+# SETUP INSTRUCTIONS:
+# ─────────────────────────────────────────────────────────────────
+# 1. Create conda environment (recommended over pip-only):
+#    conda create -n sentinel python=3.11
+#    conda activate sentinel
+#
+# 2. Install PyTorch (CPU or CUDA):
+#    CPU:   pip install torch==2.2.0 torchvision --index-url https://download.pytorch.org/whl/cpu
+#    CUDA:  pip install torch==2.2.0 torchvision --index-url https://download.pytorch.org/whl/cu121
+#
+# 3. Install PyTorch Geometric (must match torch version):
+#    pip install torch-geometric
+#    pip install torch-scatter torch-sparse -f https://data.pyg.org/whl/torch-2.2.0+cpu.html
+#    (Replace +cpu with +cu121 for CUDA)
+#
+# 4. Install RDKit (use conda, not pip, for best compatibility):
+#    conda install -c conda-forge rdkit
+#
+# 5. Install remaining requirements:
+#    pip install -r requirements.txt
+#
+# 6. Download datasets to ./data/:
+#    - Tox21:   wget https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/tox21.csv.gz
+#               gunzip data/tox21.csv.gz
+#    - ClinTox: wget https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/clintox.csv.gz
+#               gunzip data/clintox.csv.gz
+#    - QM9:     auto-downloaded by torch_geometric on first run
+#
+# 7. Train:
+#    python train.py --stage all --data-dir ./data --epochs 50
+#
+# 8. Run API:
+#    uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+# ─────────────────────────────────────────────────────────────────
+
+# Core ML
+torch>=2.2.0
+torch-geometric>=2.5.0
+
+# Cheminformatics (install via conda: conda install -c conda-forge rdkit)
+# rdkit  ← conda only
+
+# API
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+httpx>=0.27.0
+pydantic>=2.6.0
+
+# Training utilities
+mlflow>=2.11.0
+scikit-learn>=1.4.0
+numpy>=1.26.0
+pandas>=2.2.0
+
+# Explainability
+captum>=0.7.0
+
+# Visualization (for notebooks and frontend testing)
+plotly>=5.20.0
+matplotlib>=3.8.0
+
+# Dev / testing
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
