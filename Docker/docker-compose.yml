@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  sentinel:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: biosecurity-sentinel:latest
+    container_name: sentinel_api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount weights directory so trained models persist outside the container
+      - ../models/weights:/app/models/weights:ro
+      # Audit logs persist to host
+      - ../logs:/app/logs
+      # Results from evaluation runs
+      - ../results:/app/results
+    environment:
+      - ENV=production
+      - LOG_LEVEL=info
+      - AUDIT_LOG_PATH=/app/logs/audit.jsonl
+      - MODEL_PATH=/app/models/weights/sentinel.pt
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # Optional: lightweight reverse proxy
+  # Uncomment if you want nginx in front of the API
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: sentinel_nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #   depends_on:
+  #     - sentinel
+
+volumes:
+  logs:
+  results:
